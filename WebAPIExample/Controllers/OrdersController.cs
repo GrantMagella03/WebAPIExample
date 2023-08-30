@@ -29,7 +29,7 @@ namespace WebAPIExample.Controllers
           {
               return NotFound();
           }
-            return await _context.Orders.Include(i => i.customer).ToListAsync();
+            return await _context.Orders.Include(i => i.customer).Include(i => i.Orderlines).ThenInclude(i => i.Item).ToListAsync();
         }
 
         // GET: api/Orders/5
@@ -40,7 +40,7 @@ namespace WebAPIExample.Controllers
           {
               return NotFound();
           }
-            var order = await _context.Orders.Include(i=>i.customer).Where(i=>i.CustomerID==id).FirstOrDefaultAsync();
+            var order = await _context.Orders.Include(i=>i.customer).Include(i => i.Orderlines).ThenInclude(i => i.Item).Where(i=>i.ID==id).FirstOrDefaultAsync();
 
             if (order == null)
             {
@@ -120,5 +120,60 @@ namespace WebAPIExample.Controllers
         {
             return (_context.Orders?.Any(e => e.ID == id)).GetValueOrDefault();
         }
+
+        [HttpPut("Confirm/{id}")]
+        public async Task<IActionResult> SetOrderConfirm(int id, Order order) {
+            order.Status = "Confirmed";
+            return await PutOrder(id, order);
+        }
+        [HttpPut("BackOrder/{id}")]
+        public async Task<IActionResult> SetOrderBackOrdered(int id, Order order) {
+            order.Status = "BackOrdered";
+            return await PutOrder(id, order);
+        }
+        [HttpPut("Close/{id}")]
+        public async Task<IActionResult> SetOrderClosed(int id, Order order) {
+            order.Status = "Closed";
+            return await PutOrder(id, order);
+        }
+
+        [HttpGet("status={status}")]
+        public async Task<ActionResult<IEnumerable<Order>>> GetOrdersbyStatus(string status) {
+            if (_context.Orders == null) {
+                return NotFound();
+            }
+            var order = await _context.Orders.Include(i => i.customer).Where(i => i.Status == status).ToListAsync();
+
+            if (order == null) {
+                return NotFound();
+            }
+
+            return order;
+        }
+
+
+        /*
+        [HttpPut("{id}/status={c}")]
+        public async Task<IActionResult> OrderConfirm(int id, Order order, string c) {
+            if (_context.Orders == null) {
+                return NotFound();
+            }
+            if (c.Equals("Confirmed") || c.Equals("BackOrdered") || c.Equals("Cancelled")) {
+                if (order == null) {
+                  order = await _context.Orders.Include(i => i.customer).Where(i => i.CustomerID == id).FirstOrDefaultAsync();
+                    if (order == null) {
+                        return NotFound();
+                    }
+                } else {
+                    await PutOrder(id, order);
+                }
+                //var order = await _context.Orders.Include(i => i.customer).Where(i => i.CustomerID == id).FirstOrDefaultAsync();
+                order.Status = c;
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+            return NotFound();
+        }
+         */
     }
 }

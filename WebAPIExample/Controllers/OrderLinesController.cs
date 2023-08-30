@@ -14,6 +14,17 @@ namespace WebAPIExample.Controllers
     [ApiController]
     public class OrderLinesController : ControllerBase
     {
+        private async Task RecalculateOrderTotal(int ID) {
+            var total = (from o in _context.Orders
+                       join ol in _context.OrderLines on o.ID equals ol.OrderID
+                       join i in _context.Items on ol.ItemID equals i.ID
+                       where o.ID == ID
+                       select new { LineTotal = ol.Quantity * i.Price }).Sum(x => x.LineTotal);
+        var order = await _context.Orders.FindAsync(ID);
+        order!.Total = total;
+        await _context.SaveChangesAsync();
+        }
+
         private readonly AppDbContext _context;
 
         public OrderLinesController(AppDbContext context)
@@ -29,7 +40,7 @@ namespace WebAPIExample.Controllers
           {
               return NotFound();
           }
-            return await _context.OrderLines.Include(i => i.Order).ToListAsync();
+            return await _context.OrderLines.Include(i => i.Order).Include(i => i.Item).ToListAsync();
         }
 
         // GET: api/OrderLines/5
@@ -40,7 +51,7 @@ namespace WebAPIExample.Controllers
           {
               return NotFound();
           }
-            var orderLine = await _context.OrderLines.Include(i => i.Order).Where(i => i.OrderID == id).FirstOrDefaultAsync();
+            var orderLine = await _context.OrderLines.Include(i => i.Order).Include(i => i.Item).Where(i => i.OrderID == id).FirstOrDefaultAsync();
 
                 if (orderLine == null)
             {
@@ -65,6 +76,7 @@ namespace WebAPIExample.Controllers
             try
             {
                 await _context.SaveChangesAsync();
+                await RecalculateOrderTotal(orderLine.OrderID);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -92,7 +104,7 @@ namespace WebAPIExample.Controllers
           }
             _context.OrderLines.Add(orderLine);
             await _context.SaveChangesAsync();
-
+            await RecalculateOrderTotal(orderLine.OrderID);
             return CreatedAtAction("GetOrderLine", new { id = orderLine.ID }, orderLine);
         }
 
@@ -109,10 +121,10 @@ namespace WebAPIExample.Controllers
             {
                 return NotFound();
             }
-
+            var VID = orderLine.OrderID;
             _context.OrderLines.Remove(orderLine);
             await _context.SaveChangesAsync();
-
+            await RecalculateOrderTotal(VID);
             return NoContent();
         }
 
