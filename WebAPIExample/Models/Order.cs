@@ -10,5 +10,7 @@ namespace WebAPIExample.Models {
         [StringLength(30)]public string Status { get; set; } = "NEW";
         public int CustomerID { get; set; }
         public virtual Customer? customer { get; set; }
+
+        public virtual List<OrderLine>? Orderlines { get; set; }
     }
 }

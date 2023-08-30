@@ -17,5 +17,6 @@ namespace WebAPIExample.Data
         public DbSet<WebAPIExample.Models.Customer> Customers { get; set; } = default!;
         public DbSet<WebAPIExample.Models.Order> Orders { get; set; } = default!;
         public DbSet<WebAPIExample.Models.OrderLine> OrderLines { get; set; } = default!;
+        public DbSet<WebAPIExample.Models.Item> Items { get; set; } = default!;
     }
 }
