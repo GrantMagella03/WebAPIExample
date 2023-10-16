@@ -51,7 +51,7 @@ namespace WebAPIExample.Controllers
           {
               return NotFound();
           }
-            var orderLine = await _context.OrderLines.Include(i => i.Order).Include(i => i.Item).Where(i => i.OrderID == id).FirstOrDefaultAsync();
+            var orderLine = await _context.OrderLines.Include(i => i.Order).Include(i => i.Item).Where(i => i.ID == id).FirstOrDefaultAsync();
 
                 if (orderLine == null)
             {
